@@ -1,6 +1,6 @@
 import React, { useEffect,useLayoutEffect, useState,useRef } from 'react'
 import rough from "roughjs/bundled/rough.esm";
-
+import { isPointInsideShape, isPointNearLine, isPointNearText } from './utils/drawingsUtils';
 
 const Canvas = ({canvasRef,ctx,color,setDrawings,drawings,tool}) => {
 
@@ -36,7 +36,7 @@ const Canvas = ({canvasRef,ctx,color,setDrawings,drawings,tool}) => {
 
     useEffect(() => {
         ctx.current.strokeStyle = color;
-      }, []);
+      }, [color]);
 
 
       useEffect(() => {
@@ -50,37 +50,6 @@ const Canvas = ({canvasRef,ctx,color,setDrawings,drawings,tool}) => {
     }, [textboxVisible]);
 
 
-    // util function for remove 
-    const isPointInsideShape = (shape, x, y) => {
-        if (shape.type === "rectangle") {
-            return x >= shape.startX && x <= shape.startX + shape.endX &&
-                  y >= shape.startY && y <= shape.startY + shape.endY;
-        } else if (shape.type === "circle") {
-            const dist = Math.sqrt(Math.pow(x - shape.startX, 2) + Math.pow(y - shape.startY, 2));
-            return dist <= shape.endX; // endX is the radius
-        } else if (shape.type === "triangle") {
-            // For triangle, approximate with bounding box for simplicity
-            return x >= Math.min(shape.startX, shape.endX) && x <= Math.max(shape.startX, shape.endX) &&
-                  y >= Math.min(shape.startY, shape.endY) && y <= Math.max(shape.startY, shape.endY);
-        }
-        return false;
-    };
-
-    const isPointNearLine = (line, x, y) => {
-        const distance = Math.sqrt(Math.pow(line.endX - line.startX, 2) + Math.pow(line.endY - line.startY, 2));
-        const distToLine = Math.abs((line.endY - line.startY) * x - (line.endX - line.startX) * y + line.endX * line.startY - line.endY * line.startX) / distance;
-        return distToLine < 10; // Allow a small tolerance
-    };
-
-
-    const isPointNearText = (annotation, x, y) => {
-        const textWidth = ctx.current.measureText(annotation.text).width;
-        const textHeight = annotation.fontSize; // Approximate height with the font size
-        return (
-            x >= annotation.positionX && x <= annotation.positionX + textWidth &&
-            y >= annotation.positionY - textHeight && y <= annotation.positionY
-        );
-    };
 
     // util function for remove 
 
@@ -124,25 +93,27 @@ const Canvas = ({canvasRef,ctx,color,setDrawings,drawings,tool}) => {
         }
     
         else if (tool === "line") {
-          const newLine = { startX: offsetX, startY: offsetY, endX: offsetX, endY: offsetY};
+          
+          const newLine = { startX: offsetX, startY: offsetY, endX: offsetX, endY: offsetY,color:color,stroke:color};
+          console.log(newLine)
           setDrawings(prevDrawings => ({
             ...prevDrawings,
             lines: [...prevDrawings.lines, newLine]
           }));
         }else if(tool==="rect"){
-          const newRect={startX:offsetX,startY:offsetY,type:"rectangle"}
+          const newRect={startX:offsetX,startY:offsetY,type:"rectangle",color:color,stroke:color}
             setDrawings(prevDrawings=>({
               ...prevDrawings,
               shapes:[...prevDrawings.shapes,newRect]
             }));
           }else if(tool==="circle"){
-            const newCircule={startX:offsetX,startY:offsetY,type:"circle"}
+            const newCircule={startX:offsetX,startY:offsetY,type:"circle",color:color,stroke:color}
             setDrawings(prevDrawings=>({
               ...prevDrawings,
               shapes:[...prevDrawings.shapes,newCircule]
             }))
           }else if(tool==="triangle"){
-            const newTriangle={startX:offsetX,startY:offsetY,type:"triangle"}
+            const newTriangle={startX:offsetX,startY:offsetY,type:"triangle",color:color,stroke:color,thickness:2}
             setDrawings(prevDrawings=>({
               ...prevDrawings,
               shapes:[...prevDrawings.shapes,newTriangle]
@@ -221,7 +192,7 @@ const Canvas = ({canvasRef,ctx,color,setDrawings,drawings,tool}) => {
                 )
           }));
         }
-
+        console.log(drawings)
     }
 
     const handleTextboxSubmit = () => {
@@ -231,7 +202,8 @@ const Canvas = ({canvasRef,ctx,color,setDrawings,drawings,tool}) => {
               positionX: textboxPosition.x,
               positionY: textboxPosition.y,
               fontSize: 16,
-              color: color
+              color: color,
+              stroke:color
           };
 
           setDrawings(prevDrawings => ({
@@ -261,18 +233,18 @@ const Canvas = ({canvasRef,ctx,color,setDrawings,drawings,tool}) => {
 
       drawings.lines.forEach((line)=>{
         roughCanvas.draw(
-          generator.line(line.startX,line.startY,line.endX,line.endY,{color:line.color,thickness:line.thickness,roughness: 0})
+          generator.line(line.startX,line.startY,line.endX,line.endY,{stroke:line.stroke,color:line.color,thickness:line.thickness,roughness: 0})
         )
       })
 
       drawings.shapes.forEach((shape)=>{
         if(shape.type==="rectangle"){
           roughCanvas.draw(
-            generator.rectangle(shape.startX,shape.startY,shape.endX,shape.endY,{color:shape.color,thickness:shape.thickness,roughness:0})
+            generator.rectangle(shape.startX,shape.startY,shape.endX,shape.endY,{stroke:shape.color,color:shape.color,thickness:shape.thickness,roughness:0})
           )
         }else if(shape.type==="circle"){
           roughCanvas.draw(
-            generator.circle(shape.startX,shape.startY,shape.endX,{color:shape.color,thickness:shape.thickness,roughness:0})
+            generator.circle(shape.startX,shape.startY,shape.endX,{stroke:shape.color,color:shape.color,thickness:shape.thickness,roughness:0})
           )
         }else if(shape.type==="triangle"){
           const midX = (shape.startX + shape.endX) / 2;
@@ -284,6 +256,7 @@ const Canvas = ({canvasRef,ctx,color,setDrawings,drawings,tool}) => {
               [shape.endX, shape.endY],    
               [midX, thirdPointY]        
           ], {
+              color:color,
               stroke: shape.color,
               strokeWidth: shape.thickness
           });
@@ -294,6 +267,7 @@ const Canvas = ({canvasRef,ctx,color,setDrawings,drawings,tool}) => {
     drawings.textAnnotations.forEach((annotation) => {
       ctx.current.font = `${annotation.fontSize}px Arial`;
       ctx.current.fillStyle = annotation.color;
+      
       ctx.current.fillText(annotation.text, annotation.positionX, annotation.positionY);
     });
 

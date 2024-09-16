@@ -2,26 +2,25 @@ import axios from 'axios'
 import React, { useEffect, useState, useRef } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import rough from 'roughjs/bundled/rough.esm.js';
+import { fetchDrawings, deleteDrawing } from './services/apiServices';
 
 const Dashboard = () => {
     const [data, setData] = useState([]) // Contains the drawings data from the backend
     const navigate = useNavigate()
     const generator=rough.generator()
-    const base_url=import.meta.env.VITE_BASE_URL
-    // Fetch drawings when the component mounts
+   
     useEffect(() => {
-        fetchDrawings();
-    }, [])
+        const loadData = async () => {
+            try {
+                const drawings = await fetchDrawings();
+                setData(drawings);
+            } catch (e) {
+                console.log('Error fetching drawings:', e);
+            }
+        };
 
-    // Function to fetch drawings from the backend
-    const fetchDrawings = async () => {
-        try {
-            const response = await axios.get(`${base_url}/`)
-            setData(response.data); // Assuming response.data contains the drawings
-        } catch (e) {
-            console.log(e)
-        }
-    }
+        loadData();
+    }, []);
 
     const handleDrawing = (id) => {
         navigate(`/edit/${id}`)
@@ -30,22 +29,21 @@ const Dashboard = () => {
     // Handle deletion of a drawing
 
     const handleDelete = async (id) => {
-        // Show confirmation dialog before deleting
         const confirmDelete = window.confirm('Are you sure you want to delete this drawing?');
         
         if (confirmDelete) {
             try {
-                await axios.delete(`${base_url}/${id}`) 
-                setData(data.filter((drawing) => drawing._id !== id)) 
+                await deleteDrawing(id);
+                setData(data.filter((drawing) => drawing._id !== id));
                 alert('Drawing deleted successfully!');
             } catch (e) {
-                console.log(e)
+                console.log('Error deleting drawing:', e);
                 alert('Error deleting drawing.');
             }
         } else {
             alert('Deletion cancelled.');
         }
-    }
+    };
 
 
     // Function to render a drawing on the canvas using rough.js

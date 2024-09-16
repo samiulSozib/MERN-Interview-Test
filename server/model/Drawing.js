@@ -8,7 +8,8 @@ const lineSchema = new Schema({
   startY: { type: Number, required: true },
   endX: { type: Number, required: true },
   endY: { type: Number, required: true },
-  color: { type: String, default: '#000000' },
+  color: { type: String },
+  stroke:{type:String},
   thickness: { type: Number, default: 2 }
 });
 
@@ -19,7 +20,8 @@ const shapeSchema = new Schema({
   startY: { type: Number, required: true },
   endX: { type: Number, required: true },
   endY: { type: Number, required: true },
-  color: { type: String, default: '#000000' },
+  color: { type: String},
+  stroke:{type:String},
   thickness: { type: Number, default: 2 }
 });
 
@@ -29,7 +31,8 @@ const textAnnotationSchema = new Schema({
   positionX: { type: Number, required: true },
   positionY: { type: Number, required: true },
   fontSize: { type: Number, default: 16 },
-  color: { type: String, default: '#000000' }
+  color: { type: String },
+  stroke:{type:String},
 });
 
 // Main Whiteboard drawing schema

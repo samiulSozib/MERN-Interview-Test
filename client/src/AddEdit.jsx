@@ -4,6 +4,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import Canvas from './Canvas'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBrush,faFont,faCircle,faCaretUp, faSquare, faLineChart } from '@fortawesome/free-solid-svg-icons';
+import { fetchDrawingById, saveDrawing } from './services/apiServices';
 
 
 const AddEdit = () => {
@@ -14,7 +15,7 @@ const AddEdit = () => {
     const [tool, setTool] = useState("");
     
     const canvasRef = useRef(null);
-    const [history, setHistory] = useState([]);
+    
     const ctx = useRef(null);
     const base_url=import.meta.env.VITE_BASE_URL
 
@@ -35,31 +36,27 @@ const AddEdit = () => {
 
     const fetchDrawing = async () => {
         try {
-            const response = await axios.get(`${base_url}/${id}`);
+            const drawing = await fetchDrawingById(id);
             setDrawings({
-                lines: response.data.lines || [],
-                shapes: response.data.shapes || [],
-                textAnnotations: response.data.textAnnotations||[]
+                lines: drawing.lines || [],
+                shapes: drawing.shapes || [],
+                textAnnotations: drawing.textAnnotations||[]
             });
         } catch (e) {
             console.log(e);
         }
     };
 
-    const saveDrawing = async () => {
+    const handleSaveDrawing = async () => {
         try {
-            if (id) {
-                // Edit mode (update)
-                await axios.put(`${base_url}/${id}`, drawings);
-                alert("Drawing updated successfully!");
-            } else {
-                console.log(drawings)
-                // Add mode (create)
-               const data={title:"title",lines:drawings.lines,shapes:drawings.shapes,textAnnotations:drawings.textAnnotations}
-              const response =await axios.post(`${base_url}/`, data);
-              alert("Drawing added successfully")
-               
-            }
+            const drawingData = {
+                title: "title",
+                lines: drawings.lines,
+                shapes: drawings.shapes,
+                textAnnotations: drawings.textAnnotations
+            };
+            await saveDrawing(id, drawingData);
+            alert(id ? "Drawing updated successfully!" : "Drawing added successfully");
             navigate('/'); // Redirect after save
         } catch (e) {
             console.log(e);
@@ -183,7 +180,7 @@ const AddEdit = () => {
                     
                     <div className="col-md-1">
                         <div className="color-picker d-flex align-items-center justify-content-center">
-                            <button className='btn btn-info' onClick={saveDrawing}>
+                            <button className='btn btn-info' onClick={handleSaveDrawing}>
                                 {id ? "Update" : "Save"} {/* Update or Save */}
                             </button>
                             &nbsp;&nbsp;
