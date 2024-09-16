@@ -7,7 +7,7 @@ const Dashboard = () => {
     const [data, setData] = useState([]) // Contains the drawings data from the backend
     const navigate = useNavigate()
     const generator=rough.generator()
-
+    const base_url=import.meta.env.VITE_BASE_URL
     // Fetch drawings when the component mounts
     useEffect(() => {
         fetchDrawings();
@@ -16,7 +16,7 @@ const Dashboard = () => {
     // Function to fetch drawings from the backend
     const fetchDrawings = async () => {
         try {
-            const response = await axios.get('http://localhost:1000/drawings')
+            const response = await axios.get(`${base_url}/`)
             setData(response.data); // Assuming response.data contains the drawings
         } catch (e) {
             console.log(e)
@@ -35,7 +35,7 @@ const Dashboard = () => {
         
         if (confirmDelete) {
             try {
-                await axios.delete(`http://localhost:1000/drawings/${id}`) 
+                await axios.delete(`${base_url}/${id}`) 
                 setData(data.filter((drawing) => drawing._id !== id)) 
                 alert('Drawing deleted successfully!');
             } catch (e) {

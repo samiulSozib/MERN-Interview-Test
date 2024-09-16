@@ -16,6 +16,7 @@ const AddEdit = () => {
     const canvasRef = useRef(null);
     const [history, setHistory] = useState([]);
     const ctx = useRef(null);
+    const base_url=import.meta.env.VITE_BASE_URL
 
     const clearCanvas = () => {
         const canvas = canvasRef.current;
@@ -34,7 +35,7 @@ const AddEdit = () => {
 
     const fetchDrawing = async () => {
         try {
-            const response = await axios.get(`http://localhost:1000/drawings/${id}`);
+            const response = await axios.get(`${base_url}/${id}`);
             setDrawings({
                 lines: response.data.lines || [],
                 shapes: response.data.shapes || [],
@@ -49,13 +50,13 @@ const AddEdit = () => {
         try {
             if (id) {
                 // Edit mode (update)
-                await axios.put(`http://localhost:1000/drawings/${id}`, drawings);
+                await axios.put(`${base_url}/${id}`, drawings);
                 alert("Drawing updated successfully!");
             } else {
                 console.log(drawings)
                 // Add mode (create)
                const data={title:"title",lines:drawings.lines,shapes:drawings.shapes,textAnnotations:drawings.textAnnotations}
-              const response =await axios.post(`http://localhost:1000/drawings`, data);
+              const response =await axios.post(`${base_url}/`, data);
               alert("Drawing added successfully")
                
             }
