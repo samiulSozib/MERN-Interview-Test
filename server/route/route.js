@@ -1,14 +1,12 @@
 const drawingRoute=require('./drawingRoute')
 const routes = [
-    {
-        path:'/drawings',
-        handler:drawingRoute
-    },
+    // {
+    //     path:'/drawings',
+    //     handler:drawingRoute
+    // },
     {
         path: '/',
-        handler: (req,res)=>{
-            res.send({msg:'Welcome'})
-        }
+        handler: drawingRoute
     },
    
 ]
